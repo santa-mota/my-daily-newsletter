@@ -1,0 +1,47 @@
+Metadata-Version: 2.4
+Name: my-daily-newsletter
+Version: 0.1.0
+Summary: Personal AI research & news digest via WhatsApp
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.115
+Requires-Dist: uvicorn[standard]>=0.32
+Requires-Dist: httpx>=0.27
+Requires-Dist: pydantic>=2.9
+Requires-Dist: pydantic-settings>=2.6
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: apscheduler>=3.10
+Requires-Dist: python-multipart>=0.0.9
+Requires-Dist: tzdata>=2024.1
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.8; extra == "dev"
+
+# My Daily Newsletter
+
+Personal **AI news + research digest** delivered over **WhatsApp**, with hooks for **LLM generation**, **preference overrides**, **saved items** (reactions), and **scheduled** daily sends.
+
+## Quick start
+
+```bash
+cd my-daily-newsletter
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+cp .env.example .env
+# Edit .env — see comments inside.
+
+uvicorn newsletter.app:app --reload --port 8000
+```
+
+Expose `POST /webhooks/whatsapp` (and `GET` for verification) on the public internet with HTTPS (e.g. VPS + reverse proxy, or a tunnel in dev). Configure the same URL in Meta’s WhatsApp Cloud API webhook settings.
+
+## Layout
+
+- `src/newsletter/` — FastAPI app, WhatsApp client, persistence, digest orchestration stubs.
+- `src/newsletter/prompt_data/daily_digest_system.md` — Verbose system prompt for the digest generator.
+- `.env.example` — Required secrets and tuning.
+
+## Validation
+
+There is no `mint` target in this repo. After changes: `python -m compileall src` and fix any issues reported by your editor / `ruff` if installed.
