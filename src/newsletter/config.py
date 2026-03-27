@@ -33,7 +33,8 @@ class Settings(BaseSettings):
     # LLM (OpenAI-compatible)
     openai_api_key: str = Field(default="")
     openai_base_url: str = Field(default="https://api.openai.com/v1")
-    openai_model: str = Field(default="gpt-4o-mini")
+    # Default: GPT-5.4 mini — current cost/latency sweet spot vs full gpt-5.4; use gpt-5.4-nano for cheapest.
+    openai_model: str = Field(default="gpt-5.4-mini")
 
     # Schedule (interpreted in `digest_timezone`)
     digest_local_hour: int = Field(default=8)

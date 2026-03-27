@@ -46,6 +46,14 @@ class SavedLink(Base):
         String(128), nullable=True, doc="WhatsApp message id for traceability"
     )
     reaction_emoji: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Tags for efficient retrieval (pre-generated during digest creation)
+    tags: Mapped[list | None] = mapped_column(
+        JSON, nullable=True, doc="List of topic tags: ['RAG', 'GPT-5', 'inference']"
+    )
+    # Short context summary for better recall
+    context_summary: Mapped[str | None] = mapped_column(
+        String(512), nullable=True, doc="One-line summary: 'New RAG technique for faster retrieval'"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -68,6 +76,7 @@ class DigestRun(Base):
 class OutgoingMessage(Base):
     """
     Maps a WhatsApp server message id to the URL we sent, so reactions can bookmark the link.
+    Tags are pre-generated during digest creation to avoid LLM calls on every save.
     """
 
     __tablename__ = "outgoing_messages"
@@ -75,6 +84,13 @@ class OutgoingMessage(Base):
     whatsapp_wamid: Mapped[str] = mapped_column(String(128), primary_key=True)
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
     title: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    # Pre-generated tags (created during digest, reused when saved)
+    tags: Mapped[list | None] = mapped_column(
+        JSON, nullable=True, doc="Pre-computed tags to avoid LLM calls on save"
+    )
+    context_summary: Mapped[str | None] = mapped_column(
+        String(512), nullable=True, doc="Pre-computed summary for retrieval"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )

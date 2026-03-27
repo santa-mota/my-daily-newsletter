@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from newsletter.api.routes import router
+from newsletter.api.streaming import router as streaming_router
 from newsletter.db.base import init_db
 from newsletter.jobs.scheduler import shutdown_scheduler, start_scheduler
 
@@ -25,6 +26,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="My Daily Newsletter", lifespan=lifespan)
 app.include_router(router)
+app.include_router(streaming_router)
 
 
 @app.get("/")

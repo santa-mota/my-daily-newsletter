@@ -16,7 +16,8 @@ from apscheduler.triggers.cron import CronTrigger
 from newsletter.config import get_settings
 from newsletter.db.base import get_session_factory
 from newsletter.digest.delivery import deliver_digest
-from newsletter.digest.generator import generate_digest
+from newsletter.digest.agent_generator import generate_digest_with_agent
+from newsletter.digest.generator import generate_digest  # Fallback for non-agent mode
 
 log = logging.getLogger(__name__)
 
@@ -24,15 +25,20 @@ _scheduler: BackgroundScheduler | None = None
 
 
 def run_digest_job() -> None:
-    """Generate and send the digest; safe to call from cron or manual trigger."""
+    """
+    Generate and send the digest; safe to call from cron or manual trigger.
+
+    Uses agent-based generation (with tool calling) by default.
+    """
     settings = get_settings()
     SessionLocal = get_session_factory()
     db = SessionLocal()
     try:
-        result = generate_digest(db)
+        # Use agent-based generator (agent decides which APIs to call)
+        result = generate_digest_with_agent(db)
         deliver_digest(db, result)
         db.commit()
-        log.info("Digest job completed.")
+        log.info("Digest job completed (agent mode).")
     except Exception:
         log.exception("Digest job failed.")
         db.rollback()

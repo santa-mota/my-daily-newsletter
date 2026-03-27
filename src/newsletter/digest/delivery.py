@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from newsletter.config import get_settings
 from newsletter.db.models import DigestRun, OutgoingMessage
 from newsletter.schemas.digest import DigestResult
+from newsletter.services.tagging import extract_tags_from_digest_item
 from newsletter.whatsapp.client import send_text_message
 
 log = logging.getLogger(__name__)
@@ -71,15 +72,22 @@ def deliver_digest(db: Session, result: DigestResult) -> DigestRun:
             url = row["url"]
             why = row["why"]
             sec = row["section"]
+            tags = row.get("tags", [])
+
             msg = f"*{sec}*\n*{title}*\n{url}\n_{why}_"
             resp = send_text_message(to_e164=to, body=msg)
             wamid = _extract_wamid(resp)
             if wamid:
+                # Extract tags and context summary (no LLM call, already in digest)
+                tags_list, context_summary = extract_tags_from_digest_item(row)
+
                 db.add(
                     OutgoingMessage(
                         whatsapp_wamid=wamid,
                         url=url,
                         title=title,
+                        tags=tags_list,
+                        context_summary=context_summary,
                     )
                 )
 
